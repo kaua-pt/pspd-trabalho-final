@@ -1,73 +1,100 @@
-# PSPD Lab - gRPC Kubernetes 2025
+# 🚀 Guia de Execução: Ambiente Kubernetes (Configuração Base)
 
-## 🏗️ Arquitetura
+Este guia descreve como rodar a versão "Base" do projeto (Gateway + 2 Microsserviços gRPC) em um cluster Kubernetes local simulado com 3 nós.
 
-A aplicação desenvolvida consiste em um conjunto de microserviços que oferecem funcionalidades de encurtamento de URLs e geração de QR Codes. O sistema foi projetado para permitir uma comparação de performance direta entre as tecnologias gRPC e REST.
-As principais funcionalidades são:
+📋 Pré-requisitos
 
-- Encurtador de URL (Microserviço A): Recebe uma URL longa e a converte em uma versão curta e única, que redireciona para o endereço original.
-- Gerador de QR Code (Microserviço B): Gera uma imagem de QR Code a partir de um texto ou URL fornecido.
-- Frontend Unificado: Uma interface web (Web Client) que permite ao usuário interagir com ambos os serviços.
-- Gateway de API (Módulo P): Um módulo intermediário que recebe as requisições do frontend, mede o tempo de resposta e as encaminha para os microserviços correspondentes (A ou B), abstraindo a complexidade da comunicação.
-- Alternância de Protocolo: O frontend pode, em tempo real, alternar entre fazer requisições para os serviços na versão REST ou na versão gRPC, permitindo uma análise comparativa de desempenho imediata.
+- Docker instalado e rodando.
+- Minikube instalado.
+- Kubectl instalado.
+- O repositório clonado na máquina.
 
+## 🧹 Passo 1: Limpeza do Ambiente (Crucial)
 
-## 🚀 Como Executar Localmente
+Para evitar conflitos de IP ou erros de "cluster existente", sempre comece limpando o ambiente, especialmente se você já usou o Minikube para outros projetos ou testes single-node.
 
-### Pré-requisitos
-- Docker instalado
+Abra o terminal e execute:
 
-### 1. Navegue até a Raiz do Projeto
+```Bash
+# 1. Para o cluster atual
+minikube stop
 
-Abra um terminal e certifique-se de que você está no diretório raiz do projeto, onde o arquivo docker-compose.yml está localizado.
-
-### 2. Execute o Docker Compose
-
-```bash
-docker compose up --build
+# 2. Deleta o cluster (remove configurações antigas de rede/nós)
+minikube delete
 ```
 
-Este comando irá baixar as dependências necessárias, compilar as aplicações .NET, construir as imagens Docker para cada serviço e iniciá-los em uma rede interna gerenciada pelo Docker.
+## ⚙️ Passo 2: Iniciar o Cluster (Topologia 3 Nós)
 
-### 3. Acesse a Aplicação
+O projeto exige 1 nó mestre e 2 workers. Execute:
 
-Uma vez que todos os contêineres estejam em execução (você verá os logs de cada serviço no seu terminal), abra um navegador web e acesse o seguinte endereço:
-
-http://localhost:3000
-
-Isto abrirá o Web Client, a partir do qual é possível interagir com todas as funcionalidades da aplicação.
-
-## 🚀 Como Executar Com Kubernetes
-
-### Pré-requisitos
-- Minikube instalado
-
-### 1. Iniciar o Cluster
-
-```bash
-minikube start
+```Bash
+# Inicia o cluster com 3 nós simulados via Docker
+minikube start --nodes 3
 ```
 
-### 2. Configurar o Ambiente Docker
+Verifique se subiu corretamente:
 
-Para permitir que o cluster Minikube utilize imagens Docker construídas localmente sem a necessidade de um registry externo, o seguinte comando foi executado:
-
-```bash
-eval $(minikube docker-env)
+```Bash
+kubectl get nodes
+# Deve listar: minikube, minikube-m02, minikube-m03
 ```
 
-### 3. Aplicar as Configurações
+## 📦 Passo 3: Build e Carga das Imagens
 
-Para implantar todos os componentes da aplicação (Deployments e Services) no cluster, utilizou-se o comando apply, apontando para o diretório que contém os arquivos de manifesto YAML:
+Como estamos usando um cluster multi-node, o comando `docker-env` do Minikube não funciona bem. A estratégia correta é: Construir na máquina host e carregar para dentro do cluster.
 
-```bash
-kubectl apply -f k8s/
+1. Construa as imagens localmente: (Nota: Construímos apenas os serviços gRPC e Gateway para evitar erros com os serviços REST legados)
+```Bash
+docker-compose build api-gateway microservice-a-grpc microservice-b-grpc
+```
+2. Carregue as imagens para os nós do Minikube: (Isso pode levar cerca de 1 a 2 minutos)
+```Bash
+minikube image load trabalho1-api-gateway:latest trabalho1-microservice-a-grpc:latest trabalho1-microservice-b-grpc:latest
 ```
 
-### 4. Monitoramento e Depuração
+## 🚀 Passo 4: Deploy no Kubernetes
 
- Durante o desenvolvimento, comandos como kubectl get pods, kubectl get services e kubectl logs <nome-do-pod> foram essenciais para verificar o status dos componentes e diagnosticar problemas. Por fim, executa-se o comando para conseguir a url de acesso do web-client:
+Agora aplicamos os arquivos de configuração (Manifestos) que definem os Pods e Serviços.
 
- ```bash
-minikube service web-client --url
+```Bash
+# 1. Cria os Serviços (DNS interno e acesso externo)
+kubectl apply -f k8s/services.yaml
+
+# 2. Cria os Deployments (Sobe os Pods)
+kubectl apply -f k8s/deployments.yaml
 ```
+
+Aguarde a inicialização:
+
+```Bash
+kubectl get pods -w
+```
+
+Siga em frente apenas quando todos os status estiverem `Running`.
+
+## ✅ Passo 5: Teste de Funcionamento (Smoke Test)
+
+Como o Gateway está exposto via `NodePort: 30000`, precisamos descobrir o IP do Minikube para acessá-lo.
+
+1. Obtenha o IP do Cluster:
+
+```Bash
+minikube ip
+```
+2. Teste - Encurtador de Link (Via gRPC): Substitua IP_DO_MINIKUBE pelo valor obtido acima.
+
+```Bash
+curl -X POST http://IP_DO_MINIKUBE:30000/url \
+-H "Content-Type: application/json" \
+-H "x-protocol-choice: grpc" \
+-d '{"url": "https://www.google.com"}'
+```
+3. Teste - Gerador de QR Code (Via gRPC):
+
+```Bash
+curl -X POST http://IP_DO_MINIKUBE:30000/qr \
+-H "Content-Type: application/json" \
+-H "x-protocol-choice: grpc" \
+-d '{"text": "TesteGrupoPSPD"}'
+```
+Se receber os JSONs de resposta, o ambiente está validado!

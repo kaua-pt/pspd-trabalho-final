@@ -194,8 +194,8 @@ services:
     depends_on:
       - microservice-a-grpc
       - microservice-b-grpc
-      - url-shortener-rest
-      - qr-generator-rest
+#      - url-shortener-rest
+#      - qr-generator-rest
     networks:
       - pspd-services
 

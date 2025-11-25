@@ -1,0 +1,44 @@
+# --- Service para Microservice A (Interno) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-microservice-a # Esse nome vira DNS interno
+spec:
+  selector:
+    app: microservice-a
+  ports:
+    - protocol: TCP
+      port: 8082       # Porta acessível pelo Gateway
+      targetPort: 8082 # Porta do Container
+  type: ClusterIP
+
+---
+# --- Service para Microservice B (Interno) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-microservice-b
+spec:
+  selector:
+    app: microservice-b
+  ports:
+    - protocol: TCP
+      port: 8080       # Porta acessível pelo Gateway
+      targetPort: 8080 # Porta do Container
+  type: ClusterIP
+
+---
+# --- Service para Gateway (Externo) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-api-gateway
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - protocol: TCP
+      port: 8000       # Porta do Serviço
+      targetPort: 8000 # Porta do Container
+      nodePort: 30000  # Porta Fixa no Minikube para facilitar testes
+  type: NodePort

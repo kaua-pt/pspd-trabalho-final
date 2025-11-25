@@ -1,0 +1,104 @@
+# --- Microservice A (Link Shortener) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-a
+spec:
+  replicas: 1 # Configuração Base (sem paralelismo por enquanto)
+  selector:
+    matchLabels:
+      app: microservice-a
+  template:
+    metadata:
+      labels:
+        app: microservice-a
+    spec:
+      containers:
+      - name: microservice-a
+        image: trabalho1-microservice-a-grpc:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8082 # Porta gRPC (definida no Program.cs)
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+
+---
+# --- Microservice B (QR Code) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservice-b
+  template:
+    metadata:
+      labels:
+        app: microservice-b
+    spec:
+      containers:
+      - name: microservice-b
+        image: trabalho1-microservice-b-grpc:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_URLS
+          value: "http://+:8080"
+        - name: Kestrel__EndpointDefaults__Protocols
+          value: "Http2"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+
+---
+# --- API Gateway ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: trabalho1-api-gateway:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        env:
+        # Aponta para os SERVICES definidos no services.yaml
+        - name: LINK_SHORTENER_GRPC_API
+          value: "svc-microservice-a:8082"
+        - name: QR_GENERATOR_GRPC_API
+          value: "svc-microservice-b:8080"
+        # Mantemos variáveis REST vazias ou dummy para evitar erros de inicialização
+        - name: URL_SHORTENER_REST_API
+          value: "http://localhost:8083" 
+        - name: QR_GENERATOR_REST_API
+          value: "http://localhost:8082"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
