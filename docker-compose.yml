@@ -1,0 +1,231 @@
+version: '3.8'
+
+# Complete PSPD Lab Environment - All 6 Services
+# 2 gRPC Microservices (A & B) + 4 REST Services + 1 Frontend
+
+services:
+  # ========================================
+  # gRPC MICROSERVICES (Academic Comparison)
+  # ========================================
+
+  microservice-a-grpc:
+    image: trabalho1-microservice-a-grpc:latest
+    build:
+      context: ./MicroserviceA_LinkShortener
+      dockerfile: MicroserviceA_LinkShortener/Dockerfile
+    container_name: microservice-a-linkshortener-grpc
+    ports:
+      - "5001:8080"
+    environment:
+      - BASE_URL=http://localhost:5001
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - pspd-services
+    labels:
+      - "service.name=link-shortener"
+      - "service.type=grpc"
+      - "service.protocol=http2"
+      - "service.comparison=academic"
+
+  microservice-b-grpc:
+    image: trabalho1-microservice-b-grpc:latest
+    build:
+      context: ./MicroserviceB_QRCode
+      dockerfile: MicroserviceB_QRCode/Dockerfile
+    container_name: microservice-b-qrcode-grpc
+    ports:
+      - "5003:8080"  # gRPC endpoint
+      - "5004:8081"  # Health/metrics endpoint
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080;http://+:8081
+      - Kestrel__EndpointDefaults__Protocols=Http2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - pspd-services
+    labels:
+      - "service.name=qrcode-generator"
+      - "service.type=grpc"
+      - "service.protocol=http2"
+      - "service.comparison=academic"
+
+  # ========================================
+  # REST MICROSERVICES (Academic Comparison)
+  # ========================================
+
+  qr-generator-rest:
+    image: trabalho1-qr-generator-rest:latest
+    build:
+      context: ./services/rest/qr-generator
+      dockerfile: Dockerfile
+    container_name: qr-generator-rest
+    ports:
+      - "8082:8082"
+    environment:
+      - NODE_ENV=production
+      - PORT=8082
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - pspd-services
+    labels:
+      - "service.type=rest"
+      - "service.comparison=academic"
+      - "service.protocol=http"
+
+  url-shortener-rest:
+    image: trabalho1-url-shortener-rest:latest
+    build:
+      context: ./services/rest/url-shortener
+      dockerfile: Dockerfile
+    container_name: url-shortener-rest
+    ports:
+      - "8083:8083"
+    environment:
+      - NODE_ENV=production
+      - PORT=8083
+      - LOG_LEVEL=info
+      - BASE_URL=http://localhost:8083
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - pspd-services
+    labels:
+      - "service.type=rest"
+      - "service.comparison=academic"
+      - "service.protocol=http"
+
+  # ========================================
+  # EXTENDED REST SERVICES (Production)
+  # ========================================
+
+  user-management-rest:
+    image: trabalho1-user-management-rest:latest
+    build:
+      context: ./services/rest/user-management
+      dockerfile: Dockerfile
+    container_name: user-management-rest
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - pspd-services
+    labels:
+      - "service.type=rest"
+      - "service.comparison=production"
+      - "service.protocol=http"
+
+  analytics-rest:
+    image: trabalho1-analytics-rest:latest
+    build:
+      context: ./services/rest/analytics
+      dockerfile: Dockerfile
+    container_name: analytics-rest
+    ports:
+      - "8081:8081"
+    environment:
+      - NODE_ENV=production
+      - PORT=8081
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - pspd-services
+    labels:
+      - "service.type=rest"
+      - "service.comparison=production"
+      - "service.protocol=http"
+
+  # ========================================
+  # OPTIONAL API GATEWAY
+  # ========================================
+
+  api-gateway:
+    image: trabalho1-api-gateway:latest
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - URL_SHORTENER_REST_API=http://url-shortener-rest:8083
+      - QR_GENERATOR_REST_API=http://qr-generator-rest:8082
+      - LINK_SHORTENER_GRPC_API=microservice-a-grpc:8082
+      - QR_GENERATOR_GRPC_API=microservice-b-grpc:8080
+    depends_on:
+      - microservice-a-grpc
+      - microservice-b-grpc
+      - url-shortener-rest
+      - qr-generator-rest
+    networks:
+      - pspd-services
+
+  rest-api-gateway:
+    image: nginx:alpine
+    container_name: rest-api-gateway
+    ports:
+      - "8000:80"
+    volumes:
+      - ./config/nginx-rest.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - qr-generator-rest
+      - url-shortener-rest
+      - user-management-rest
+      - analytics-rest
+    networks:
+      - pspd-services
+    labels:
+      - "service.type=gateway"
+      - "service.protocol=http"
+    profiles:
+      - gateway
+
+networks:
+  pspd-services:
+    driver: bridge
+    name: pspd-lab-network
+
+volumes:
+  grpc-data:
+    driver: local
+  rest-data:
+    driver: local

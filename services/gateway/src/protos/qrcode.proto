@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option csharp_namespace = "MicroserviceB_QRCode";
+
+package qrcode;
+
+service QrCodeGenerator {
+  rpc GenerateQrCode(GenerateQrCodeRequest) returns (GenerateQrCodeReply);
+}
+
+message GenerateQrCodeRequest {
+  string text = 1;
+}
+
+message GenerateQrCodeReply {
+  string qrCodeBase64 = 1;
+}

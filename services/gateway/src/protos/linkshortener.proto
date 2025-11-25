@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option csharp_namespace = "MicroserviceA_LinkShortener";
+
+package linkshortener;
+
+service LinkShortener {
+  rpc CreateLink(CreateLinkRequest) returns (CreateLinkReply);
+}
+
+message CreateLinkRequest {
+  string url = 1;
+}
+
+message CreateLinkReply {
+  string shortUrl = 1;
+}

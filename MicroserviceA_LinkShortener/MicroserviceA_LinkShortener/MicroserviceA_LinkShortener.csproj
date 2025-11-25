@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ef0f3e5a-5a05-4efc-bd1e-1a3c469b8945</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.71.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Grpc.Swagger" Version="0.9.9" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.5" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.5" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.5" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="Protos\linkshortener.proto" GrpcServices="Server" />
+	</ItemGroup>
+
+
+</Project>

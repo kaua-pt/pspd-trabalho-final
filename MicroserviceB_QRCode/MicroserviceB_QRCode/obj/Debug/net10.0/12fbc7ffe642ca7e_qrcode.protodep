@@ -1,0 +1,5 @@
+obj\Debug\net10.0\Protos/Qrcode.cs \
+obj\Debug\net10.0\Protos/QrcodeGrpc.cs: C:/Users/droto/.nuget/packages/microsoft.aspnetcore.grpc.jsontranscoding/9.0.9/content/protos/google/api/http.proto\
+ C:/Users/droto/.nuget/packages/grpc.tools/2.71.0/build/native/include/google/protobuf/descriptor.proto\
+ C:/Users/droto/.nuget/packages/microsoft.aspnetcore.grpc.jsontranscoding/9.0.9/content/protos/google/api/annotations.proto\
+ Protos/qrcode.proto
