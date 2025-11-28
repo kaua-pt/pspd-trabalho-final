@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: microservice-a
 spec:
-  replicas: 1 # Configuração Base (sem paralelismo por enquanto)
+  replicas: 3 # Múltiplas réplicas para alta disponibilidade
   selector:
     matchLabels:
       app: microservice-a
@@ -19,13 +19,31 @@ spec:
         imagePullPolicy: Never
         ports:
         - containerPort: 8082 # Porta gRPC (definida no Program.cs)
+        - containerPort: 8080 # Porta HTTP/Health
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
+            memory: "256Mi"  # Valores mais realistas para aplicação .NET
+            cpu: "250m"      # 0.25 CPU core
           limits:
-            memory: "256Mi"
-            cpu: "500m"
+            memory: "512Mi"  # Limite de memória
+            cpu: "1000m"     # 1 CPU core máximo
+        # Health checks para garantir que pods estão saudáveis
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
 
 ---
 # --- Microservice B (QR Code) ---
@@ -34,7 +52,7 @@ kind: Deployment
 metadata:
   name: microservice-b
 spec:
-  replicas: 1
+  replicas: 3 # Múltiplas réplicas para alta disponibilidade
   selector:
     matchLabels:
       app: microservice-b
@@ -48,19 +66,34 @@ spec:
         image: trabalho1-microservice-b-grpc:latest
         imagePullPolicy: Never
         ports:
-        - containerPort: 8080
+        - containerPort: 8080  # Porta gRPC (HTTP/2)
+        - containerPort: 8081  # Porta HTTP/Health (HTTP/1.1)
         env:
         - name: ASPNETCORE_URLS
-          value: "http://+:8080"
-        - name: Kestrel__EndpointDefaults__Protocols
-          value: "Http2"
+          value: "http://+:8080;http://+:8081"
+        # Removido Kestrel__EndpointDefaults__Protocols para permitir HTTP/1.1 no health check
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
+            memory: "256Mi"  # Valores mais realistas para aplicação .NET
+            cpu: "250m"      # 0.25 CPU core
           limits:
-            memory: "256Mi"
-            cpu: "500m"
+            memory: "512Mi"  # Limite de memória
+            cpu: "1000m"     # 1 CPU core máximo
+        # Health checks usando TCP probe (compatível com gRPC)
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
 
 ---
 # --- API Gateway ---
@@ -69,7 +102,7 @@ kind: Deployment
 metadata:
   name: api-gateway
 spec:
-  replicas: 1
+  replicas: 2 # Múltiplas réplicas para alta disponibilidade do gateway
   selector:
     matchLabels:
       app: api-gateway
@@ -92,13 +125,30 @@ spec:
           value: "svc-microservice-b:8080"
         # Mantemos variáveis REST vazias ou dummy para evitar erros de inicialização
         - name: URL_SHORTENER_REST_API
-          value: "http://localhost:8083" 
+          value: "http://localhost:8083"
         - name: QR_GENERATOR_REST_API
           value: "http://localhost:8082"
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
+            memory: "128Mi"  # Gateway normalmente consome menos recursos
+            cpu: "100m"      # 0.1 CPU core
           limits:
-            memory: "256Mi"
-            cpu: "500m"
+            memory: "256Mi"  # Limite de memória
+            cpu: "500m"      # 0.5 CPU core máximo
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3

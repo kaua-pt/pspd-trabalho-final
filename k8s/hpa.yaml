@@ -1,0 +1,152 @@
+# ========================================
+# HORIZONTAL POD AUTOSCALERS (HPA)
+# ========================================
+#
+# O HPA ajusta automaticamente o número de réplicas baseado em métricas.
+# Requer o Metrics Server instalado no cluster:
+#   kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+#
+# Para Minikube, habilite com:
+#   minikube addons enable metrics-server
+#
+# ========================================
+
+# --- HPA para Microservice A (Link Shortener) ---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: microservice-a-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: microservice-a
+  minReplicas: 2                # Mínimo de 2 réplicas para alta disponibilidade
+  maxReplicas: 10               # Máximo de 10 réplicas sob carga
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  # Escala quando CPU média > 70%
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80  # Escala quando memória média > 80%
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Aguarda 5min antes de reduzir
+      policies:
+      - type: Percent
+        value: 50                      # Reduz no máximo 50% das réplicas por vez
+        periodSeconds: 60
+      - type: Pods
+        value: 2                       # Ou no máximo 2 pods por vez
+        periodSeconds: 60
+      selectPolicy: Min                # Escolhe a política mais conservadora
+    scaleUp:
+      stabilizationWindowSeconds: 0    # Escala imediatamente
+      policies:
+      - type: Percent
+        value: 100                     # Pode dobrar o número de réplicas
+        periodSeconds: 30
+      - type: Pods
+        value: 4                       # Ou adicionar até 4 pods por vez
+        periodSeconds: 30
+      selectPolicy: Max                # Escolhe a política mais agressiva
+
+---
+# --- HPA para Microservice B (QR Code) ---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: microservice-b-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: microservice-b
+  minReplicas: 2                # Mínimo de 2 réplicas para alta disponibilidade
+  maxReplicas: 10               # Máximo de 10 réplicas sob carga
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  # Escala quando CPU média > 70%
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80  # Escala quando memória média > 80%
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Aguarda 5min antes de reduzir
+      policies:
+      - type: Percent
+        value: 50                      # Reduz no máximo 50% das réplicas por vez
+        periodSeconds: 60
+      - type: Pods
+        value: 2                       # Ou no máximo 2 pods por vez
+        periodSeconds: 60
+      selectPolicy: Min                # Escolhe a política mais conservadora
+    scaleUp:
+      stabilizationWindowSeconds: 0    # Escala imediatamente
+      policies:
+      - type: Percent
+        value: 100                     # Pode dobrar o número de réplicas
+        periodSeconds: 30
+      - type: Pods
+        value: 4                       # Ou adicionar até 4 pods por vez
+        periodSeconds: 30
+      selectPolicy: Max                # Escolhe a política mais agressiva
+
+---
+# --- HPA para API Gateway ---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway
+  minReplicas: 2                # Mínimo de 2 réplicas para alta disponibilidade
+  maxReplicas: 8                # Gateway pode escalar menos que os microserviços
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75  # Gateway pode tolerar mais CPU antes de escalar
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 3
+        periodSeconds: 30
+      selectPolicy: Max
