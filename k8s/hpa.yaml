@@ -1,16 +1,3 @@
-# ========================================
-# HORIZONTAL POD AUTOSCALERS (HPA)
-# ========================================
-#
-# O HPA ajusta automaticamente o número de réplicas baseado em métricas.
-# Requer o Metrics Server instalado no cluster:
-#   kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-#
-# Para Minikube, habilite com:
-#   minikube addons enable metrics-server
-#
-# ========================================
-
 # --- HPA para Microservice A (Link Shortener) ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -21,7 +8,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: microservice-a
-  minReplicas: 2                # Mínimo de 2 réplicas para alta disponibilidade
+  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
   maxReplicas: 10               # Máximo de 10 réplicas sob carga
   metrics:
   - type: Resource
@@ -29,16 +16,16 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70  # Escala quando CPU média > 70%
+        averageUtilization: 40  # Escala quando CPU média > 70%
   - type: Resource
     resource:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 80  # Escala quando memória média > 80%
+        averageUtilization: 40  # Escala quando memória média > 80%
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300  # Aguarda 5min antes de reduzir
+      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50                      # Reduz no máximo 50% das réplicas por vez
@@ -69,7 +56,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: microservice-b
-  minReplicas: 2                # Mínimo de 2 réplicas para alta disponibilidade
+  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
   maxReplicas: 10               # Máximo de 10 réplicas sob carga
   metrics:
   - type: Resource
@@ -77,16 +64,16 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70  # Escala quando CPU média > 70%
+        averageUtilization: 50  # Escala quando CPU média > 70%
   - type: Resource
     resource:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 80  # Escala quando memória média > 80%
+        averageUtilization: 40  # Escala quando memória média > 80%
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300  # Aguarda 5min antes de reduzir
+      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50                      # Reduz no máximo 50% das réplicas por vez
@@ -117,7 +104,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: api-gateway
-  minReplicas: 2                # Mínimo de 2 réplicas para alta disponibilidade
+  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
   maxReplicas: 8                # Gateway pode escalar menos que os microserviços
   metrics:
   - type: Resource
@@ -125,16 +112,16 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 75  # Gateway pode tolerar mais CPU antes de escalar
+        averageUtilization: 70  # Gateway pode tolerar mais CPU antes de escalar
   - type: Resource
     resource:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 80
+        averageUtilization: 70
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300
+      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50

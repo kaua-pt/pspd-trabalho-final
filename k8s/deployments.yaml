@@ -130,10 +130,10 @@ spec:
           value: "http://localhost:8082"
         resources:
           requests:
-            memory: "128Mi"  # Gateway normalmente consome menos recursos
+            memory: "256Mi"  # Gateway normalmente consome menos recursos
             cpu: "100m"      # 0.1 CPU core
           limits:
-            memory: "256Mi"  # Limite de memória
+            memory: "512Mi"  # Limite de memória
             cpu: "500m"      # 0.5 CPU core máximo
         # Health checks
         livenessProbe:
