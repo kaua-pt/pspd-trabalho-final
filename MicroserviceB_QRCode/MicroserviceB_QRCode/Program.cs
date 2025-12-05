@@ -1,7 +1,27 @@
 using MicroserviceB_QRCode.Services;
 using Microsoft.OpenApi.Models;
+using System.Net; // Para usar IPAddress.Any
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ===================================================================
+// 1. CONFIGURAÇÃO DO KESTREL (VERSÃO CORRIGIDA)
+// ===================================================================
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // Porta 8080 para tráfego gRPC (HTTP/2)
+    options.Listen(IPAddress.Any, 8080, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+    });
+
+    // Porta 8081 para tráfego HTTP/1.1 (health checks, swagger, métricas Prometheus)
+    options.Listen(IPAddress.Any, 8081, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
+    });
+});
 
 // Add CORS policy for frontend access
 builder.Services.AddCors(options =>
@@ -38,6 +58,7 @@ var app = builder.Build();
 
 // Enable routing FIRST
 app.UseRouting();
+app.UseHttpMetrics();
 
 // Enable CORS AFTER routing
 app.UseCors("AllowFrontend");
@@ -76,5 +97,7 @@ app.MapGet("/health", () => Results.Json(new
     service = "qrcode-generator-grpc",
     timestamp = DateTime.UtcNow
 }));
+
+app.MapMetrics();
 
 app.Run();
