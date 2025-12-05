@@ -28,6 +28,7 @@ echo "🚀 Aplicando configurações no Kubernetes..."
 kubectl apply -f k8s/services.yaml
 kubectl apply -f k8s/deployments.yaml
 kubectl apply -f k8s/hpa.yaml
+kubectl apply -f k8s/prometheus.yaml
 
 # 7. Aguarda os Pods iniciarem
 echo "⏳ Aguardando pods inicializarem..."
@@ -36,3 +37,5 @@ kubectl wait --for=condition=ready pod --all --timeout=120s
 echo "✅ Ambiente pronto!"
 echo "➡️  IP do Minikube: $(minikube ip)"
 echo "➡️  Para monitorar o HPA: kubectl get hpa -w"
+echo "➡️  Para abrir o Prometheus: kubectl port-forward service/prometheus-service 9090:8080"
+echo "➡️  Para rodar o teste de carga: locust -f locustfile.py --host http://$(minikube service api-gateway --url | head -n 1 | awk '{print $2}')"
