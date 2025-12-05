@@ -10,6 +10,9 @@ spec:
       app: microservice-a
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
       labels:
         app: microservice-a
     spec:
@@ -19,6 +22,7 @@ spec:
         imagePullPolicy: Never
         ports:
         - containerPort: 8082 # Porta gRPC (definida no Program.cs)
+        - containerPort: 8080 # Porta HTTP/Health
         resources:
           requests:
             memory: "128Mi"
@@ -40,6 +44,9 @@ spec:
       app: microservice-b
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
       labels:
         app: microservice-b
     spec:
@@ -48,12 +55,11 @@ spec:
         image: trabalho1-microservice-b-grpc:latest
         imagePullPolicy: Never
         ports:
-        - containerPort: 8080
+        - containerPort: 8080  # Porta gRPC (HTTP/2)
+        - containerPort: 8081  # Porta HTTP/Health (HTTP/1.1)
         env:
         - name: ASPNETCORE_URLS
-          value: "http://+:8080"
-        - name: Kestrel__EndpointDefaults__Protocols
-          value: "Http2"
+          value: "http://+:8080;http://+:8081"
         resources:
           requests:
             memory: "128Mi"
@@ -75,6 +81,9 @@ spec:
       app: api-gateway
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
       labels:
         app: api-gateway
     spec:

@@ -1,6 +1,7 @@
 using MicroserviceA_LinkShortener.Services;
 using Microsoft.OpenApi.Models;
 using System.Net; // <<< ADICIONADO para usar IPAddress.Any
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,6 +65,7 @@ var app = builder.Build();
 // ===================================================================
 
 app.UseRouting();
+app.UseHttpMetrics();
 app.UseCors("AllowFrontend");
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -99,5 +101,7 @@ app.MapGet("/health", () => Results.Json(new
     service = "link-shortener-grpc",
     timestamp = DateTime.UtcNow
 }));
+
+app.MapMetrics();
 
 app.Run();
