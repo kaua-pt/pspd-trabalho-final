@@ -16,7 +16,7 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 40  # Escala quando CPU média > 70%
+        averageUtilization: 25  # Escala quando CPU média > 70%
   - type: Resource
     resource:
       name: memory

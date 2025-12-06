@@ -6,10 +6,10 @@ import { endpoints, headers, payloads } from './config.js';
 // Aumenta gradualmente a carga até encontrar o ponto de quebra
 export const options = {
   stages: [
-    { duration: '1m', target: 10 },   // mantém carga baixa
+    /* { duration: '1m', target: 10 },   // mantém carga baixa
     { duration: '1m', target: 50 },   // mantém 50
     { duration: '1m', target: 100 },  // mantém 100
-    { duration: '1m', target: 150 },  // aumenta para 150
+    { duration: '1m', target: 150 },*/  // aumenta para 150
     { duration: '1m', target: 10000 },  // mantém 150
     { duration: '5m', target: 10000 },  // aumenta para 150
     { duration: '1m', target: 0 },    // recovery - ramp-down gradual
@@ -21,8 +21,16 @@ export const options = {
 };
 
 export default function () {
-  // QR Code é mais pesado - focamos nele para stress
-  let response = http.post(endpoints.qr, payloads.qr, { headers });
+  // Testa ambos os endpoints para stress completo
+  // Alterna entre QR Code e URL
+  const useQr = Math.random() < 0.5;
+
+  let response;
+  if (useQr) {
+    response = http.post(endpoints.qr, payloads.qr, { headers });
+  } else {
+    response = http.post(endpoints.url, payloads.url, { headers });
+  }
 
   check(response, {
     'status is 200': (r) => r.status === 200,
