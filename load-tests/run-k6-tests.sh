@@ -48,11 +48,11 @@ elif command -v minikube &> /dev/null && minikube status &> /dev/null; then
     print_info "Minikube detectado - URL base: $BASE_URL"
 elif kubectl get nodes &> /dev/null; then
     # K3s ou outro Kubernetes detectado
-    MASTER_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null)
-    GATEWAY_PORT=$(kubectl get svc api-gateway-service -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null)
+    GATEWAY_PORT=$(kubectl get svc svc-api-gateway -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null)
 
-    if [ -n "$MASTER_IP" ] && [ -n "$GATEWAY_PORT" ]; then
-        BASE_URL="http://${MASTER_IP}:${GATEWAY_PORT}"
+    if [ -n "$GATEWAY_PORT" ]; then
+        # Usar localhost (funciona para K3s local e WSL2)
+        BASE_URL="http://localhost:${GATEWAY_PORT}"
         print_info "K3s/Kubernetes detectado - URL base: $BASE_URL"
     else
         print_error "Não foi possível detectar o gateway service!"

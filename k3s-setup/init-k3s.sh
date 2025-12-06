@@ -122,13 +122,29 @@ case $image_option in
 
         print_success "Imagens salvas em k3s-setup/images/"
         echo ""
-        print_warning "Copie estas imagens para cada worker e importe com:"
+
+        # Importar automaticamente no master
+        print_info "Importando imagens no master node..."
+        sudo k3s ctr images import k3s-setup/images/gateway.tar
+        sudo k3s ctr images import k3s-setup/images/microservice-a.tar
+        sudo k3s ctr images import k3s-setup/images/microservice-b.tar
+
+        print_success "Imagens importadas no master!"
         echo ""
-        echo "  sudo k3s ctr images import gateway.tar"
-        echo "  sudo k3s ctr images import microservice-a.tar"
-        echo "  sudo k3s ctr images import microservice-b.tar"
-        echo ""
-        read -p "Pressione ENTER após importar as imagens em todos os nodes..."
+
+        # Verificar se há workers
+        WORKER_COUNT=$(kubectl get nodes --no-headers | grep -v "control-plane" | wc -l)
+        if [ "$WORKER_COUNT" -gt 0 ]; then
+            print_warning "Você tem $WORKER_COUNT worker(s) no cluster"
+            print_info "Copie e importe as imagens nos workers:"
+            echo ""
+            echo "  scp k3s-setup/images/*.tar user@worker:/tmp/"
+            echo "  ssh worker 'sudo k3s ctr images import /tmp/gateway.tar'"
+            echo "  ssh worker 'sudo k3s ctr images import /tmp/microservice-a.tar'"
+            echo "  ssh worker 'sudo k3s ctr images import /tmp/microservice-b.tar'"
+            echo ""
+            read -p "Pressione ENTER após importar as imagens nos workers..."
+        fi
         ;;
     2)
         print_info "Configurando registry local não implementado neste script"
@@ -225,9 +241,9 @@ print_info "Informações de Acesso"
 print_title "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# No K3s, usar IP de qualquer node + NodePort
+# No K3s, usar IP de qualquer node + NodePort (ou localhost para WSL2/local)
 MASTER_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
-GATEWAY_PORT=$(kubectl get svc api-gateway-service -o jsonpath='{.spec.ports[0].nodePort}')
+GATEWAY_PORT=$(kubectl get svc svc-api-gateway -o jsonpath='{.spec.ports[0].nodePort}')
 
 print_success "Deploy concluído!"
 echo ""
@@ -235,15 +251,16 @@ echo -e "${GREEN}╔════════════════════
 echo -e "${GREEN}║          🎉 Aplicação Disponível!                  ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "  ${BLUE}URL Base:${NC}     http://$MASTER_IP:$GATEWAY_PORT"
-echo -e "  ${BLUE}Endpoint URL:${NC} http://$MASTER_IP:$GATEWAY_PORT/url"
-echo -e "  ${BLUE}Endpoint QR:${NC}  http://$MASTER_IP:$GATEWAY_PORT/qr"
+echo -e "  ${BLUE}URL Local:${NC}    http://localhost:$GATEWAY_PORT"
+echo -e "  ${BLUE}URL Rede:${NC}     http://$MASTER_IP:$GATEWAY_PORT (se acessível)"
+echo -e "  ${BLUE}Endpoint URL:${NC} http://localhost:$GATEWAY_PORT/url"
+echo -e "  ${BLUE}Endpoint QR:${NC}  http://localhost:$GATEWAY_PORT/qr"
 echo ""
 
 # Teste básico
 print_info "Teste de conectividade:"
 echo ""
-echo "  curl -X POST http://$MASTER_IP:$GATEWAY_PORT/url \\"
+echo "  curl -X POST http://localhost:$GATEWAY_PORT/url \\"
 echo "    -H \"Content-Type: application/json\" \\"
 echo "    -H \"x-protocol-choice: grpc\" \\"
 echo "    -d '{\"url\": \"https://www.google.com\"}'"
@@ -261,6 +278,6 @@ echo ""
 print_info "Para executar testes de carga:"
 echo ""
 echo "  cd load-tests"
-echo "  export BASE_URL=\"http://$MASTER_IP:$GATEWAY_PORT\""
+echo "  export BASE_URL=\"http://localhost:$GATEWAY_PORT\""
 echo "  ./run-k6-tests.sh stress"
 echo ""
