@@ -10,9 +10,8 @@ export const options = {
     { duration: '1m', target: 50 },   // mantém 50
     { duration: '1m', target: 100 },  // mantém 100
     { duration: '1m', target: 150 },*/  // aumenta para 150
-    { duration: '1m', target: 10000 },  // mantém 150
-    { duration: '5m', target: 10000 },  // aumenta para 150
-    { duration: '1m', target: 0 },    // recovery - ramp-down gradual
+    { duration: '1m', target: 30000 },  // mantém 150
+    { duration: '1m', target: 100 },    // recovery - ramp-down gradual
   ],
   thresholds: {
     'http_req_failed': ['rate<0.1'], // permite até 10% de falhas em stress test

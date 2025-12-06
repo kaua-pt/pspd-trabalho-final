@@ -37,16 +37,37 @@ if ! command -v k6 &> /dev/null; then
     exit 1
 fi
 
-# Obter IP do Minikube
-MINIKUBE_IP=$(minikube ip 2>/dev/null)
-if [ -z "$MINIKUBE_IP" ]; then
-    print_error "Minikube não está rodando!"
-    print_info "Inicie o cluster com: ./init.sh"
+# Detectar tipo de cluster e obter URL base
+if [ -n "$BASE_URL" ]; then
+    # URL fornecida manualmente via variável de ambiente
+    print_info "Usando URL base fornecida: $BASE_URL"
+elif command -v minikube &> /dev/null && minikube status &> /dev/null; then
+    # Minikube detectado e rodando
+    MINIKUBE_IP=$(minikube ip 2>/dev/null)
+    BASE_URL="http://${MINIKUBE_IP}:30000"
+    print_info "Minikube detectado - URL base: $BASE_URL"
+elif kubectl get nodes &> /dev/null; then
+    # K3s ou outro Kubernetes detectado
+    MASTER_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null)
+    GATEWAY_PORT=$(kubectl get svc api-gateway-service -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null)
+
+    if [ -n "$MASTER_IP" ] && [ -n "$GATEWAY_PORT" ]; then
+        BASE_URL="http://${MASTER_IP}:${GATEWAY_PORT}"
+        print_info "K3s/Kubernetes detectado - URL base: $BASE_URL"
+    else
+        print_error "Não foi possível detectar o gateway service!"
+        print_info "Defina manualmente: export BASE_URL=\"http://IP:PORTA\""
+        exit 1
+    fi
+else
+    print_error "Nenhum cluster Kubernetes detectado!"
+    echo ""
+    print_info "Opções:"
+    echo "  1. Inicie o Minikube: ./init.sh"
+    echo "  2. Configure K3s: cd k3s-setup && ./install-master.sh"
+    echo "  3. Defina URL manual: export BASE_URL=\"http://IP:PORTA\""
     exit 1
 fi
-
-BASE_URL="http://${MINIKUBE_IP}:30000"
-print_info "URL base: $BASE_URL"
 
 # Criar diretório de relatórios com timestamp
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
