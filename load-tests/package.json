@@ -1,0 +1,32 @@
+{
+  "name": "t3-stress-load-tests",
+  "version": "1.0.0",
+  "description": "Load and stress tests for microservices architecture",
+  "scripts": {
+    "test:url-rest": "k6 run -e BASE_URL=http://localhost:8000 -e PROTOCOL=rest k6/url-shortener-stress.js",
+    "test:url-grpc": "k6 run -e BASE_URL=http://localhost:8000 -e PROTOCOL=grpc k6/url-shortener-stress.js",
+    "test:qr-rest": "k6 run -e BASE_URL=http://localhost:8000 -e PROTOCOL=rest k6/qr-generator-stress.js",
+    "test:qr-grpc": "k6 run -e BASE_URL=http://localhost:8000 -e PROTOCOL=grpc k6/qr-generator-stress.js",
+    "test:combined-rest": "k6 run -e BASE_URL=http://localhost:8000 -e PROTOCOL=rest k6/combined-stress.js",
+    "test:combined-grpc": "k6 run -e BASE_URL=http://localhost:8000 -e PROTOCOL=grpc k6/combined-stress.js",
+    "test:url-k8s-rest": "k6 run -e BASE_URL=http://$(minikube ip):30000 -e PROTOCOL=rest k6/url-shortener-stress.js",
+    "test:url-k8s-grpc": "k6 run -e BASE_URL=http://$(minikube ip):30000 -e PROTOCOL=grpc k6/url-shortener-stress.js",
+    "test:qr-k8s-rest": "k6 run -e BASE_URL=http://$(minikube ip):30000 -e PROTOCOL=rest k6/qr-generator-stress.js",
+    "test:qr-k8s-grpc": "k6 run -e BASE_URL=http://$(minikube ip):30000 -e PROTOCOL=grpc k6/qr-generator-stress.js",
+    "test:combined-k8s-rest": "k6 run -e BASE_URL=http://$(minikube ip):30000 -e PROTOCOL=rest k6/combined-stress.js",
+    "test:combined-k8s-grpc": "k6 run -e BASE_URL=http://$(minikube ip):30000 -e PROTOCOL=grpc k6/combined-stress.js",
+    "test:all-local": "npm run test:url-rest && npm run test:url-grpc && npm run test:qr-rest && npm run test:qr-grpc && npm run test:combined-rest && npm run test:combined-grpc",
+    "test:compare-protocols": "echo '=== Testing REST ===' && npm run test:combined-rest && echo '\n=== Testing gRPC ===' && npm run test:combined-grpc"
+  },
+  "keywords": [
+    "k6",
+    "load-testing",
+    "stress-testing",
+    "microservices",
+    "grpc",
+    "rest"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}
