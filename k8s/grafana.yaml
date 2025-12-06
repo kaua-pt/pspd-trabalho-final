@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  namespace: default
+data:
+  datasources.yaml: |-
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-service:8080
+        isDefault: true
+        version: 1
+        editable: false
+
+  dashboards.yaml: |-
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: default
+data:
+  sample-dashboard.json: |-
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "panels": [
+        {
+          "type": "graph",
+          "title": "Process CPU (rate)",
+          "targets": [
+            {"expr": "sum by(instance) (rate(process_cpu_seconds_total[1m])) * 100", "refId": "A"}
+          ],
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0}
+        },
+        {
+          "type": "graph",
+          "title": "Process RSS Memory (bytes)",
+          "targets": [
+            {"expr": "process_resident_memory_bytes", "refId": "B"}
+          ],
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+        }
+      ],
+      "schemaVersion": 16,
+      "title": "Sample App Metrics",
+      "uid": "sample-app-metrics"
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:9.5.6
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: grafana-provisioning
+              mountPath: /etc/grafana/provisioning
+            - name: grafana-dashboards
+              mountPath: /var/lib/grafana/dashboards
+      volumes:
+        - name: grafana-provisioning
+          configMap:
+            name: grafana-provisioning
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: default
+spec:
+  selector:
+    app: grafana
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30002
