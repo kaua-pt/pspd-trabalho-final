@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: microservice-a
 spec:
-  replicas: 1 # Múltiplas réplicas para alta disponibilidade
+  replicas: 2 # Múltiplas réplicas para alta disponibilidade
   selector:
     matchLabels:
       app: microservice-a
@@ -55,7 +55,7 @@ kind: Deployment
 metadata:
   name: microservice-b
 spec:
-  replicas: 1 # Múltiplas réplicas para alta disponibilidade
+  replicas: 2 # Múltiplas réplicas para alta disponibilidade
   selector:
     matchLabels:
       app: microservice-b
@@ -108,7 +108,7 @@ kind: Deployment
 metadata:
   name: api-gateway
 spec:
-  replicas: 1 # Múltiplas réplicas para alta disponibilidade do gateway
+  replicas: 15 # Múltiplas réplicas para alta disponibilidade do gateway
   selector:
     matchLabels:
       app: api-gateway
