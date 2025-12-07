@@ -11,3 +11,6 @@ kube_pod_status_phase{namespace="default", phase="Running"}
 
 
 
+TO kt3
+watch kubectl get pods -A -o wide
+watch kubectl get hpa

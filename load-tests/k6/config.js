@@ -1,5 +1,5 @@
 // Configurações compartilhadas para testes K6
-export const BASE_URL = __ENV.BASE_URL || 'http://192.168.49.2:30000';
+export const BASE_URL = 'http://192.168.0.10:30000';  // Changed from 192.168.49.2 to peixoto IP
 
 export const endpoints = {
   url: `${BASE_URL}/url`,

@@ -8,7 +8,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: microservice-a
-  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
+  minReplicas: 2               # Mínimo de 2 réplicas para alta disponibilidade
   maxReplicas: 10               # Máximo de 10 réplicas sob carga
   metrics:
   - type: Resource
@@ -56,7 +56,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: microservice-b
-  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
+  minReplicas: 2               # Mínimo de 2 réplicas para alta disponibilidade
   maxReplicas: 10               # Máximo de 10 réplicas sob carga
   metrics:
   - type: Resource
@@ -104,8 +104,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: api-gateway
-  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
-  maxReplicas: 8                # Gateway pode escalar menos que os microserviços
+  minReplicas: 2               # Mínimo de 2 réplicas para alta disponibilidade
+  maxReplicas: 30               # Gateway pode escalar menos que os microserviços
   metrics:
   - type: Resource
     resource:

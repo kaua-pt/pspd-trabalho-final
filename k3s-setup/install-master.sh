@@ -142,18 +142,18 @@ chown "$REAL_USER:$REAL_USER" "$INFO_FILE"
 print_success "Informações salvas em: $INFO_FILE"
 echo ""
 
-# Verificar nodes (usando kubeconfig do K3s diretamente)
+# Verificar nodes
 print_info "Status do cluster:"
 echo ""
-KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl get nodes
+kubectl get nodes
 echo ""
 
 # Instalar Metrics Server
 print_info "Instalando Metrics Server para HPA..."
-KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
 # Patch para funcionar em ambientes de desenvolvimento
-KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl patch deployment metrics-server -n kube-system --type='json' \
+kubectl patch deployment metrics-server -n kube-system --type='json' \
   -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
 
 print_success "Metrics Server instalado!"
