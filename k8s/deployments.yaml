@@ -108,7 +108,7 @@ kind: Deployment
 metadata:
   name: api-gateway
 spec:
-  replicas: 15 # Múltiplas réplicas para alta disponibilidade do gateway
+  replicas: 2 # Múltiplas réplicas para alta disponibilidade do gateway
   selector:
     matchLabels:
       app: api-gateway

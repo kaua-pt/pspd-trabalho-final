@@ -6,11 +6,11 @@ import { endpoints, headers, payloads, defaultThresholds } from './config.js';
 // Simula o comportamento típico de produção
 export const options = {
   stages: [
-    { duration: '2m', target: 10 },  // ramp-up para 10 usuários
-    { duration: '5m', target: 10 },  // mantém 10 usuários por 5 minutos
-    { duration: '2m', target: 20 },  // aumenta para 20 usuários
-    { duration: '5m', target: 20 },  // mantém 20 usuários
-    { duration: '2m', target: 0 },   // ramp-down
+    { duration: '1m', target: 10 },  // ramp-up para 10 usuários
+    { duration: '1m', target: 10 },  // mantém 10 usuários por 5 minutos
+    { duration: '1m', target: 500 },  // aumenta para 20 usuários
+    { duration: '3m', target: 500 },  // mantém 20 usuários
+    { duration: '1m', target: 0 },   // ramp-down
   ],
   thresholds: {
     ...defaultThresholds,

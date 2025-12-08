@@ -15,7 +15,7 @@ minikube addons enable metrics-server
 # 4. Build das imagens (Localmente)
 echo "🏗️ Construindo imagens localmente..."
 # Removemos o 'eval minikube docker-env' pois ele falha em multi-node
-docker-compose build api-gateway microservice-a-grpc microservice-b-grpc
+docker compose build api-gateway microservice-a-grpc microservice-b-grpc
 
 # 5. Carrega as imagens para dentro dos nós do Cluster
 echo "📦 Carregando imagens para o cluster (isso pode demorar um pouco)..."

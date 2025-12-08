@@ -25,7 +25,7 @@ spec:
         averageUtilization: 40  # Escala quando memória média > 80%
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
+      stabilizationWindowSeconds: 180  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50                      # Reduz no máximo 50% das réplicas por vez
@@ -73,7 +73,7 @@ spec:
         averageUtilization: 40  # Escala quando memória média > 80%
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
+      stabilizationWindowSeconds: 180  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50                      # Reduz no máximo 50% das réplicas por vez
@@ -121,7 +121,7 @@ spec:
         averageUtilization: 70
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
+      stabilizationWindowSeconds: 180  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50
