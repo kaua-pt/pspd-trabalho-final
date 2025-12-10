@@ -6,13 +6,13 @@ import { endpoints, headers, payloads } from './config.js';
 // Aumenta gradualmente a carga até encontrar o ponto de quebra
 export const options = {
   stages: [
-    /* { duration: '1m', target: 10 },   // mantém carga baixa
-    { duration: '1m', target: 50 },   // mantém 50
-    { duration: '1m', target: 100 },  // mantém 100
-    { duration: '1m', target: 150 },*/  // aumenta para 150
-    { duration: '1m', target: 10000 },  // mantém 150
-    { duration: '5m', target: 10000 },  // aumenta para 150
-    { duration: '1m', target: 0 },    // recovery - ramp-down gradual
+    { duration: '10s', target: 1 },  // mantém 150
+    { duration: '1m', target: 1 },  // mantém 150
+    { duration: '1m', target: 1000 },  // mantém 150
+    { duration: '1m', target: 1000 },  // mantém 150
+    { duration: '3m', target: 10000 },  // mantém 150
+    { duration: '2m', target: 10000 },  // aumenta para 150
+    { duration: '30s', target: 0 },    // recovery - ramp-down gradual
   ],
   thresholds: {
     'http_req_failed': ['rate<0.1'], // permite até 10% de falhas em stress test

@@ -8,7 +8,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: microservice-a
-  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
+  minReplicas: 2               # Mínimo de 2 réplicas para alta disponibilidade
   maxReplicas: 10               # Máximo de 10 réplicas sob carga
   metrics:
   - type: Resource
@@ -25,7 +25,7 @@ spec:
         averageUtilization: 40  # Escala quando memória média > 80%
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
+      stabilizationWindowSeconds: 180  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50                      # Reduz no máximo 50% das réplicas por vez
@@ -56,7 +56,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: microservice-b
-  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
+  minReplicas: 2               # Mínimo de 2 réplicas para alta disponibilidade
   maxReplicas: 10               # Máximo de 10 réplicas sob carga
   metrics:
   - type: Resource
@@ -73,7 +73,7 @@ spec:
         averageUtilization: 40  # Escala quando memória média > 80%
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
+      stabilizationWindowSeconds: 180  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50                      # Reduz no máximo 50% das réplicas por vez
@@ -104,8 +104,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: api-gateway
-  minReplicas: 1                # Mínimo de 2 réplicas para alta disponibilidade
-  maxReplicas: 8                # Gateway pode escalar menos que os microserviços
+  minReplicas: 2               # Mínimo de 2 réplicas para alta disponibilidade
+  maxReplicas: 30               # Gateway pode escalar menos que os microserviços
   metrics:
   - type: Resource
     resource:
@@ -121,7 +121,7 @@ spec:
         averageUtilization: 70
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 10  # Aguarda 10seg antes de reduzir
+      stabilizationWindowSeconds: 180  # Aguarda 10seg antes de reduzir
       policies:
       - type: Percent
         value: 50
